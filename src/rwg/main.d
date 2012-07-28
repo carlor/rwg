@@ -4,6 +4,7 @@
 // Part of RWG - Random Word Generator
 // Copyright (C) 2012 Nathan M. Swan
 // Distributed under the Boost Software License
+// (See accompanying file ../../LICENSE)
 
 module rwg.main;
 
