@@ -1,0 +1,14 @@
+#!/usr/bin/env rwg
+
+# Example (C)V(n) word generator
+
+generate Word
+
+Word = Syllable [80% Syllable [40% Syllable, ], ]
+Syllable = Onset Nucleus Coda
+Onset = [p, t, k, b, d, g, s, h, y, w, ]
+Nucleus = [a, e, i, o, u]
+Coda = [20% n, ]
+
+disallow yi, wu
+
