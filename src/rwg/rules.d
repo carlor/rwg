@@ -156,7 +156,7 @@ struct Rules {
             r.options[$-1] = Sequence.init;
         }
         
-        writeln("pre ", r);
+        //writeln("pre ", r);
         
         auto nLastPercents = r.options.length - r.percentages.length;
         float lastPercent = (1.0 - percent) / nLastPercents;
@@ -165,7 +165,7 @@ struct Rules {
             r.percentages ~= percent;
         }
         
-        writeln("pst ", r);
+        //writeln("pst ", r);
         
         return r;
     }
