@@ -59,13 +59,13 @@ A rule expression can be:
     Nucleus = Vowel
     
     # A sequence of various rulexprs:
-    Syllable = Onset Nucleus [20% n, ]
+    Syllable = Onset Nucleus (20% n)
     
     # A random choice between rulexprs
     Vowel = [a, e, i, o, u]
     
     # Which may include a choice of nothing:
-    Onset = [p, t, k, ]
+    Onset = (p, t, k) # same as [p, t, k, ]
     
     # Percentages may be given starting from the left:
     Onset = [80% Consonant, Stop Liquid]
