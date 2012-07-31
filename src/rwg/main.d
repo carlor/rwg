@@ -77,6 +77,7 @@ To start, drag rulefile here: `);
         getopt(args,
             "h|help", &showHelp,
             "n|count", &wordcount,
+            "s|seed", &seed,
             "l", &ignore, // the secret option!
             "man", &showManual
         );
@@ -142,6 +143,7 @@ Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
     string[] args;          // command line arguments
     string rulefile;        // filename specified
     uint wordcount = 100;   // number of words to generate
+    uint seed = uint.max;
     
     // -- wordgen state --
     Rules rules;
@@ -150,6 +152,7 @@ Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
 
 struct WordGen {
     void generateWords(ref Options opts) {
+        rg = Random(opts.seed == uint.max ? unpredictableSeed : opts.seed);
         foreach(i; 0 .. opts.wordcount) {
             writeln(generateWord(opts.rules));
         }
@@ -191,7 +194,7 @@ struct WordGen {
         } else {
             assert(rule.peek!Choice());
             return generate(rules, rule.get!Choice()
-                    .getAt(uniform!"()"(0.0f, 1.0f)));
+                    .getAt(uniform!"()"(0.0f, 1.0f, rg)));
         }
     }
     
@@ -201,6 +204,8 @@ struct WordGen {
         }
         return reduce!allows(false, rules.seqsToDisallow);
     }
+    
+    Random rg;
 }
 
 
