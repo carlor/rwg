@@ -104,9 +104,9 @@ struct Rules {
         
         // Read a sequence
         Rule[] r;
-        while(!tokens.empty && ![","d, "]"d].canFind(tokens.front)) {
-            if (tokens.front == "[") {
-                r ~= Rule(choiceExpr()); // choice
+        while(!tokens.empty && ![","d, "]"d, ")"d].canFind(tokens.front)) {
+            if (tokens.front == "[" || tokens.front == "(") {
+                r ~= Rule(choiceExpr(tokens.front)); // choice
             } else {
                 r ~= Rule(tokens.front); // constant
                 tokens.popFront();
@@ -120,15 +120,18 @@ struct Rules {
     }
     
     // [option1, option2, option3]
-    Choice choiceExpr() {
-        assert(tokens.front == "[");
+    Choice choiceExpr(dstring op) {
+        assert(tokens.front == op);
+        auto cop = (op == "[") ? "]"d : ")"d;
+        
+        //writefln("%s %s", op, cop);
         
         Choice r;
         float percent = 0.0;
         bool doneWithPercentages = false;
         
         while(!tokens.empty) {
-            if (tokens.front == "," || tokens.front == "[") {
+            if (tokens.front == "," || tokens.front == op) {
                 tokens.popFront();
                 if (tokens.front.back == '%') {
                     senforce(!doneWithPercentages, "percents must be first");
@@ -142,11 +145,18 @@ struct Rules {
                     r.options ~= ruleExpr();
                 }
             } else {
-                senforce(tokens.front == "]", "bracket or comma expected");
+                senforce(tokens.front == cop, "bracket or comma expected");
                 tokens.popFront();
                 break;            
             }
         }
+        
+        if (op == "(") {
+            r.options.length++;
+            r.options[$-1] = Sequence.init;
+        }
+        
+        writeln("pre ", r);
         
         auto nLastPercents = r.options.length - r.percentages.length;
         float lastPercent = (1.0 - percent) / nLastPercents;
@@ -155,7 +165,7 @@ struct Rules {
             r.percentages ~= percent;
         }
         
-        //writeln(r);
+        writeln("pst ", r);
         
         return r;
     }
@@ -190,7 +200,7 @@ struct Rules {
     RuleName
     i           phone literal
     50%         percentage
-    [ ] , =     operator
+    [ ] , = ( ) operator
     
    ignoring whitespace, comments
  +/
@@ -221,11 +231,11 @@ struct Tokenizer {
                 str.popFront();
                 if (front.back == '%') break;
             }
-        } else if ("[],=".canFind(str.front)) { // operator
+        } else if ("[],=()".canFind(str.front)) { // operator
             front = [str.front];
             str.popFront();
         } else { // RuleName, directive, phone
-            while(!str.empty && !"[],= \t\r\n".canFind(str.front)) {
+            while(!str.empty && !"[],=() \t\r\n".canFind(str.front)) {
                 front ~= str.front;
                 str.popFront();
             }
