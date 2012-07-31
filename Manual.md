@@ -10,10 +10,12 @@ Otherwise, see:
 
 Command Line Options
 --------------------
-Usage: `rwg [-h] [-l] [-n <count>] [--man] <rulefile>`
+Usage: `rwg [-h] [-l] [-s <seed>] [-n <count>] [--man] <rulefile>`
 
 * The `-h` option shows a basic description of the command line arguments.
 * The `-l` is a mystery option!
+* The `-s` option sets the randomness seed - if you use the same number, the 
+   same words will be generated. The default is random.
 * The `-n` determines how many words will be generated; 100 is the default.
 * The `--man` opens the RWG homepage in the browser.
 * The `<rulefile>` is the location of a rulefile in the file system.
