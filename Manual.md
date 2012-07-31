@@ -2,6 +2,12 @@ rwg - the Random Word Generator
 ===============================
 The Random Word Generator generates words from a rulefile.
 
+If no arguments are given (e.g. if you click on the executable from the 
+desktop), interactive mode will be launched, giving you step-by-step
+instructions.
+
+Otherwise, see:
+
 Command Line Options
 --------------------
 Usage: `rwg [-h] [-l] [-n <count>] [--man] <rulefile>`
@@ -10,7 +16,7 @@ Usage: `rwg [-h] [-l] [-n <count>] [--man] <rulefile>`
 * The `-l` is a mystery option!
 * The `-n` determines how many words will be generated; 100 is the default.
 * The `--man` opens the RWG homepage in the browser.
-* The required `<rulefile>` is the location of a rulefile in the file system.
+* The `<rulefile>` is the location of a rulefile in the file system.
 
 Rulefile
 --------
