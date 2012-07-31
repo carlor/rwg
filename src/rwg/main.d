@@ -8,12 +8,14 @@
 
 module rwg.main;
 
+import std.array;
 import std.algorithm;
 import std.conv;
 import std.file;
 import std.getopt;
 import std.process;
 import std.random;
+import std.range;
 import std.stdio;
 import std.string;
 import std.utf;
@@ -182,9 +184,9 @@ struct WordGen {
             } else {
                 return r;
             }
-        } else if (rule.peek!Sequence()) {
+        } else if (rule.peek!(rwg.rules.Sequence)()) {
             dstring r;
-            foreach(rl; rule.get!Sequence()) {
+            foreach(rl; rule.get!(rwg.rules.Sequence)()) {
                 r ~= generate(rules, rl);
             }
             return r;
@@ -196,11 +198,59 @@ struct WordGen {
     }
     
     bool disallows(ref Rules rules, dstring attempt) {
-        bool allows(bool b, dstring forbiddenSequence) {
-            return b || attempt.canFind(forbiddenSequence);
+        return !rules.patternsToDisallow
+                .filter!(r => disallows(rules, r, attempt))().empty;
+    }
+    
+    bool disallows(ref Rules rules, Rule pattern, dstring attempt) {
+        foreach(size_t i; 0 .. attempt.length) {
+            foreach(size_t j; i .. attempt.length) {
+                if (rules.matches(pattern, attempt[i..j])) return true;
+            }
         }
-        return reduce!allows(false, rules.seqsToDisallow);
+        return false;
+    }
+    
+    bool matches(ref Rules rules, Rule pattern, dstring attempt) {
+        // TODO...
+        return false;
     }
 }
+
+/+
+auto subranges(R)(R range) if (isBidirectionalRange!R) {
+    struct Result {
+        R forward;
+        @property bool empty() { return range.empty; }
+        
+        this(int x) {
+            forward = range.save;
+            if (range.empty) empty = true;
+        }
+        
+        invariant() { writeln(range, "\t", forward); }
+        
+        @property typeof(forward.front) front() { return forward.front; }
+        void popFront() {
+            if (forward.empty) {
+                if (range.empty) {
+                    return;
+                }
+                range.popFront();
+                forward = range.save;
+            } else {
+                forward.popFront();
+            }
+        }
+        
+    }
+    return Result(0);
+}
+
+unittest {
+    writeln(subranges("hello"));
+    writeln(subranges(""));
+}
++/
 
 

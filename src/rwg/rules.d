@@ -71,14 +71,12 @@ struct Rules {
         assert(tokens.front == "disallow");
         tokens.popFront();
         
-        while(!tokens.empty) {
-            if (tokens.front != ",") {
-                foreach(c; tokens.front) {
-                    // TODO get rid of this limitation
-                    senforce(isAlpha(c), "you can only disallow constants");
-                }
-                seqsToDisallow ~= tokens.front;
-            }
+        senforce(!tokens.empty, "you can't disallow nothing");
+        while(1) {
+            patternsToDisallow ~= ruleExpr();
+            if (tokens.empty) break;
+            senforce(tokens.front == ",",
+                "disallowed rulexprs must be separated by commas");
             tokens.popFront();
         }
     }
@@ -132,7 +130,8 @@ struct Rules {
                 tokens.popFront();
                 if (tokens.front.back == '%') {
                     senforce(!doneWithPercentages, "percents must be first");
-                    percent += to!float(tokens.front[0 .. $-1]) / 100.0;
+                    percent += tokens.front[0 .. $-1]
+                                .toUTF8().to!float() / 100.0;
                     senforce(percent <= 1.0, "percent overflow");
                     tokens.popFront();
                     r.percentages ~= percent; 
@@ -182,7 +181,7 @@ struct Rules {
     
     // -- rule state --
     Rule ruleToGenerate;
-    dstring[] seqsToDisallow;
+    Rule[] patternsToDisallow;
     Rule[dstring] definedRules;
 }
 
