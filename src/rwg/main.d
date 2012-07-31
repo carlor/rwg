@@ -31,7 +31,7 @@ struct Options {
         try {
             realMain();
             return 0;
-        } catch (Exception e) { // TODO RwgException
+        } catch (Exception e) {
             stderr.writeln(e.msg);
             return 1;
         }

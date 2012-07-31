@@ -25,13 +25,14 @@ import rwg.main;
 struct Rules {
     // gets lines from specified file
     void read(in Options options) {
+        linenum = 1;
         // TODO stdio buffer?
         foreach(line; readText!string(options.rulefile).splitLines()) {
             interpretLine(toUTF32(line));
+            linenum++;
         }
-        if (!ruleToGenerate.hasValue()) {
-            throw new Exception("Rule to generate not specified!");
-        }
+        senforce(ruleToGenerate.hasValue(),
+                `the file doesn't contain a generate directive`);
         //writeln(ruleToGenerate, " ", seqsToDisallow);
     }
     
@@ -130,9 +131,9 @@ struct Rules {
             if (tokens.front == "," || tokens.front == "[") {
                 tokens.popFront();
                 if (tokens.front.back == '%') {
-                    senforce(!doneWithPercentages, "Percents must be first.");
+                    senforce(!doneWithPercentages, "percents must be first");
                     percent += to!float(tokens.front[0 .. $-1]) / 100.0;
-                    senforce(percent <= 1.0, "Percent overflow");
+                    senforce(percent <= 1.0, "percent overflow");
                     tokens.popFront();
                     r.percentages ~= percent; 
                     r.options ~= ruleExpr();
@@ -141,7 +142,7 @@ struct Rules {
                     r.options ~= ruleExpr();
                 }
             } else {
-                senforce(tokens.front == "]", "Bracket or comma expected");
+                senforce(tokens.front == "]", "bracket or comma expected");
                 tokens.popFront();
                 break;            
             }
@@ -157,6 +158,23 @@ struct Rules {
         //writeln(r);
         
         return r;
+    }
+    
+    
+    // -- error-handling junk --
+    uint linenum;
+    
+    // gives an error message
+    void senforce(bool cond, string errmsg) {
+        if (!cond) {
+            throw new RwgException(
+                format("Error on line %s: %s.", linenum, errmsg));
+        }
+    }
+    
+    // exception to catch
+    class RwgException : Exception {
+        this(string msg) { super(msg); }
     }
     
     // -- file-reading state --
@@ -219,19 +237,6 @@ struct Tokenizer {
     }
     
     dstring str;
-}
-
-// gives a syntax error message
-void senforce(bool cond, string errmsg="") {
-    if (!cond) {
-        string msg;
-        if (errmsg.empty) {
-            msg = "Syntax error";
-        } else {
-            msg = "Syntax error: "~errmsg;
-        }
-        throw new Exception(msg);
-    }
 }
 
 /+ A rule is:
