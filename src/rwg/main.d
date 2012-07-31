@@ -9,11 +9,13 @@
 module rwg.main;
 
 import std.algorithm;
+import std.conv;
 import std.file;
 import std.getopt;
 import std.process;
 import std.random;
 import std.stdio;
+import std.string;
 import std.utf;
 
 import rwg.rules;
@@ -52,10 +54,21 @@ struct Options {
     }
     
     void interactive() {
-        // TODO interactive
-        stderr.writeln(`Please use the command line.`);
-        writeUsage(stderr);
-        stdin.readln();
+        writeln();
+        write(`Welcome to rwg - the random word generator
+Copyright (C) 2012 Nathan M. Swan
+
+To start, drag rulefile here: `);
+        rulefile = stdin.readln().idup.strip();
+        write(`How many words do you want? `);
+        try {
+            wordcount = stdin.readln().idup.strip().to!int();
+        } catch (ConvException ce) { wordcount = 100; }
+        writeln();
+        writeln("Okay, here goes...");
+        writeln();
+        executeRwg();
+        writeln();
     }
     
     // reads instructions from cmd-line args
