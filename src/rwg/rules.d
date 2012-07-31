@@ -25,13 +25,14 @@ import rwg.main;
 struct Rules {
     // gets lines from specified file
     void read(in Options options) {
+        linenum = 1;
         // TODO stdio buffer?
         foreach(line; readText!string(options.rulefile).splitLines()) {
             interpretLine(toUTF32(line));
+            linenum++;
         }
-        if (!ruleToGenerate.hasValue()) {
-            throw new Exception("Rule to generate not specified!");
-        }
+        senforce(ruleToGenerate.hasValue(),
+                `the file doesn't contain a generate directive`);
         //writeln(ruleToGenerate, " ", seqsToDisallow);
     }
     
@@ -103,9 +104,9 @@ struct Rules {
         
         // Read a sequence
         Rule[] r;
-        while(!tokens.empty && ![","d, "]"d].canFind(tokens.front)) {
-            if (tokens.front == "[") {
-                r ~= Rule(choiceExpr()); // choice
+        while(!tokens.empty && ![","d, "]"d, ")"d].canFind(tokens.front)) {
+            if (tokens.front == "[" || tokens.front == "(") {
+                r ~= Rule(choiceExpr(tokens.front)); // choice
             } else {
                 r ~= Rule(tokens.front); // constant
                 tokens.popFront();
@@ -119,20 +120,23 @@ struct Rules {
     }
     
     // [option1, option2, option3]
-    Choice choiceExpr() {
-        assert(tokens.front == "[");
+    Choice choiceExpr(dstring op) {
+        assert(tokens.front == op);
+        auto cop = (op == "[") ? "]"d : ")"d;
+        
+        //writefln("%s %s", op, cop);
         
         Choice r;
         float percent = 0.0;
         bool doneWithPercentages = false;
         
         while(!tokens.empty) {
-            if (tokens.front == "," || tokens.front == "[") {
+            if (tokens.front == "," || tokens.front == op) {
                 tokens.popFront();
                 if (tokens.front.back == '%') {
-                    senforce(!doneWithPercentages, "Percents must be first.");
+                    senforce(!doneWithPercentages, "percents must be first");
                     percent += to!float(tokens.front[0 .. $-1]) / 100.0;
-                    senforce(percent <= 1.0, "Percent overflow");
+                    senforce(percent <= 1.0, "percent overflow");
                     tokens.popFront();
                     r.percentages ~= percent; 
                     r.options ~= ruleExpr();
@@ -141,11 +145,18 @@ struct Rules {
                     r.options ~= ruleExpr();
                 }
             } else {
-                senforce(tokens.front == "]", "Bracket or comma expected");
+                senforce(tokens.front == cop, "bracket or comma expected");
                 tokens.popFront();
                 break;            
             }
         }
+        
+        if (op == "(") {
+            r.options.length++;
+            r.options[$-1] = Sequence.init;
+        }
+        
+        //writeln("pre ", r);
         
         auto nLastPercents = r.options.length - r.percentages.length;
         float lastPercent = (1.0 - percent) / nLastPercents;
@@ -154,9 +165,26 @@ struct Rules {
             r.percentages ~= percent;
         }
         
-        //writeln(r);
+        //writeln("pst ", r);
         
         return r;
+    }
+    
+    
+    // -- error-handling junk --
+    uint linenum;
+    
+    // gives an error message
+    void senforce(bool cond, string errmsg) {
+        if (!cond) {
+            throw new RwgException(
+                format("Error on line %s: %s.", linenum, errmsg));
+        }
+    }
+    
+    // exception to catch
+    class RwgException : Exception {
+        this(string msg) { super(msg); }
     }
     
     // -- file-reading state --
@@ -172,7 +200,7 @@ struct Rules {
     RuleName
     i           phone literal
     50%         percentage
-    [ ] , =     operator
+    [ ] , = ( ) operator
     
    ignoring whitespace, comments
  +/
@@ -203,11 +231,11 @@ struct Tokenizer {
                 str.popFront();
                 if (front.back == '%') break;
             }
-        } else if ("[],=".canFind(str.front)) { // operator
+        } else if ("[],=()".canFind(str.front)) { // operator
             front = [str.front];
             str.popFront();
         } else { // RuleName, directive, phone
-            while(!str.empty && !"[],= \t\r\n".canFind(str.front)) {
+            while(!str.empty && !"[],=() \t\r\n".canFind(str.front)) {
                 front ~= str.front;
                 str.popFront();
             }
@@ -219,19 +247,6 @@ struct Tokenizer {
     }
     
     dstring str;
-}
-
-// gives a syntax error message
-void senforce(bool cond, string errmsg="") {
-    if (!cond) {
-        string msg;
-        if (errmsg.empty) {
-            msg = "Syntax error";
-        } else {
-            msg = "Syntax error: "~errmsg;
-        }
-        throw new Exception(msg);
-    }
 }
 
 /+ A rule is:

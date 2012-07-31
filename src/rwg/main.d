@@ -9,11 +9,13 @@
 module rwg.main;
 
 import std.algorithm;
+import std.conv;
 import std.file;
 import std.getopt;
 import std.process;
 import std.random;
 import std.stdio;
+import std.string;
 import std.utf;
 
 import rwg.rules;
@@ -31,7 +33,7 @@ struct Options {
         try {
             realMain();
             return 0;
-        } catch (Exception e) { // TODO RwgException
+        } catch (Exception e) {
             stderr.writeln(e.msg);
             return 1;
         }
@@ -42,7 +44,8 @@ struct Options {
     void realMain() {
         if (args.length == 0) {
             throw new Exception("Whoa! Zero arguments? What OS is this?");
-        } else
+        }
+        
         // no args means it was launched from GUI
         if (args.length == 1) {
             interactive();
@@ -52,10 +55,21 @@ struct Options {
     }
     
     void interactive() {
-        // TODO interactive
-        stderr.writeln(`Please use the command line.`);
-        writeUsage(stderr);
-        stdin.readln();
+        writeln();
+        write(`Welcome to rwg - the random word generator
+Copyright (C) 2012 Nathan M. Swan
+
+To start, drag rulefile here: `);
+        rulefile = stdin.readln().idup.strip();
+        write(`How many words do you want? `);
+        try {
+            wordcount = stdin.readln().idup.strip().to!int();
+        } catch (ConvException ce) { wordcount = 100; }
+        writeln();
+        writeln("Okay, here goes...");
+        writeln();
+        executeRwg();
+        writeln();
     }
     
     // reads instructions from cmd-line args
@@ -64,6 +78,7 @@ struct Options {
         getopt(args,
             "h|help", &showHelp,
             "n|count", &wordcount,
+            "s|seed", &seed,
             "l", &ignore, // the secret option!
             "man", &showManual
         );
@@ -93,7 +108,7 @@ struct Options {
     // shows the command line options
     void writeUsage(File f = stdout) {
         f.writeln(
-`rwg 0.1.0
+`rwg 0.1.1
 Copyright (C) 2012 Nathan M. Swan
 
 Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
@@ -129,6 +144,7 @@ Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
     string[] args;          // command line arguments
     string rulefile;        // filename specified
     uint wordcount = 100;   // number of words to generate
+    uint seed = uint.max;
     
     // -- wordgen state --
     Rules rules;
@@ -137,6 +153,7 @@ Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
 
 struct WordGen {
     void generateWords(ref Options opts) {
+        rg = Random(opts.seed == uint.max ? unpredictableSeed : opts.seed);
         foreach(i; 0 .. opts.wordcount) {
             writeln(generateWord(opts.rules));
         }
@@ -178,7 +195,7 @@ struct WordGen {
         } else {
             assert(rule.peek!Choice());
             return generate(rules, rule.get!Choice()
-                    .getAt(uniform!"()"(0.0f, 1.0f)));
+                    .getAt(uniform!"()"(0.0f, 1.0f, rg)));
         }
     }
     
@@ -188,6 +205,8 @@ struct WordGen {
         }
         return reduce!allows(false, rules.seqsToDisallow);
     }
+    
+    Random rg;
 }
 
 
