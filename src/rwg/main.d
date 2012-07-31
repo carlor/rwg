@@ -93,7 +93,10 @@ struct Options {
     // shows the command line options
     void writeUsage(File f = stdout) {
         f.writeln(
-`Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
+`rwg 0.1.0
+Copyright (C) 2012 Nathan M. Swan
+
+Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
 
   langfile      an .rwg file
   -h, --help    shows this help
