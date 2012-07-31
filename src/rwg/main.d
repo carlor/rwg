@@ -44,7 +44,8 @@ struct Options {
     void realMain() {
         if (args.length == 0) {
             throw new Exception("Whoa! Zero arguments? What OS is this?");
-        } else
+        }
+        
         // no args means it was launched from GUI
         if (args.length == 1) {
             interactive();
@@ -107,7 +108,7 @@ To start, drag rulefile here: `);
     // shows the command line options
     void writeUsage(File f = stdout) {
         f.writeln(
-`rwg 0.1.0
+`rwg 0.1.1
 Copyright (C) 2012 Nathan M. Swan
 
 Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
