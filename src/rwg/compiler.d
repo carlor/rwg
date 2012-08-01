@@ -129,7 +129,7 @@ void main(string[] args) {
         args ~= srcName;
         args ~= "-n"~to!string(wc);
         args ~= "-s"~to!string(seed);
-        execvp("rdmd", ["rdmd", srcName]);
+        execvp("rdmd", args);
     }
     
     bool shouldRun;
