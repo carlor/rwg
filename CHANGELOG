@@ -1,3 +1,6 @@
+Changes for 0.2:
+    added the --compile option
+
 Changes for 0.1.1:
     improved error messages
     interactive mode
