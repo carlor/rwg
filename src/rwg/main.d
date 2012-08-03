@@ -18,6 +18,7 @@ import std.stdio;
 import std.string;
 import std.utf;
 
+import rwg.compiler;
 import rwg.rules;
 
 int main(string[] args) {
@@ -79,6 +80,9 @@ To start, drag rulefile here: `);
             "h|help", &showHelp,
             "n|count", &wordcount,
             "s|seed", &seed,
+            "compile", &compile,
+            "compile-out", &compileOut,
+            "compile-only", &compileOnly, // TODO here!
             "l", &ignore, // the secret option!
             "man", &showManual
         );
@@ -89,7 +93,12 @@ To start, drag rulefile here: `);
             displayManual();
         } else if (args.length > 1) { // ...
             rulefile = args[1];
-            executeRwg();
+            if (compile || compileOut !is null || compileOnly) {
+                readRules();
+                Compiler().compile(this);
+            } else {
+                executeRwg();
+            }
         } else {
             if (getcwd().endsWith(".lang")) {
                 string altfile = getcwd()[0 .. $-5] ~ ".rwg";
@@ -145,6 +154,11 @@ Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
     string rulefile;        // filename specified
     uint wordcount = 100;   // number of words to generate
     uint seed = uint.max;
+    
+    // -- compilation options --
+    bool compile = false;
+    string compileOut = null;
+    bool compileOnly = false;
     
     // -- wordgen state --
     Rules rules;

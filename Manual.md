@@ -10,7 +10,7 @@ Otherwise, see:
 
 Command Line Options
 --------------------
-Usage: `rwg [-h] [-l] [-s <seed>] [-n <count>] [--man] <rulefile>`
+Usage: `rwg [-h] [-l] [-s <seed>] [-n <count>] [--man] [cp-options] <rulefile>`
 
 * The `-h` option shows a basic description of the command line arguments.
 * The `-l` is a mystery option!
@@ -18,6 +18,7 @@ Usage: `rwg [-h] [-l] [-s <seed>] [-n <count>] [--man] <rulefile>`
    same words will be generated. The default is random.
 * The `-n` determines how many words will be generated; 100 is the default.
 * The `--man` opens the RWG homepage in the browser.
+* The `[cp-options]` are documented in their section below.
 * The `<rulefile>` is the location of a rulefile in the file system.
 
 Rulefile
@@ -78,5 +79,17 @@ A rule expression can be:
 For any questions, please contact the author whose gmail username is 
 `nathanmswan`.
     
-    
+Compiler Options
+----------------
+You may, if you wish, compile the rulefile into a machine-code executable file
+that takes similar options to generate the random words. This feature is meant
+for generating a large amount (> one million) of words, as with small wordcounts
+the time taken to compile isn't made up for.
+
+This feature is turned on with the `--compile` option.
+
+By default, the executable is a temporary file which is deleted after use.
+To prevent deletion, set the output file with the `--compile-out=<file>` option.
+
+Use the `--compile-only` option if you don't want the compiled program to run.
 
