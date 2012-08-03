@@ -11,5 +11,4 @@ Nucleus = [a, e, i, o, u]
 Coda = (20% n)
 
 disallow yi, wu
-#disallow Nucleus Nucleus, ^Nucleus$
 

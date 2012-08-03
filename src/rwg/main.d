@@ -21,6 +21,7 @@ import std.utf;
 import rwg.compiler;
 import rwg.rules;
 
+// god ol' main
 int main(string[] args) {
     return Options().main(args);
 }
@@ -82,7 +83,7 @@ To start, drag rulefile here: `);
             "s|seed", &seed,
             "compile", &compile,
             "compile-out", &compileOut,
-            "compile-only", &compileOnly, // TODO here!
+            "compile-only", &compileOnly,
             "l", &ignore, // the secret option!
             "man", &showManual
         );
@@ -91,10 +92,10 @@ To start, drag rulefile here: `);
             writeUsage();
         } else if (showManual) { // --man
             displayManual();
-        } else if (args.length > 1) { // ...
+        } else if (args.length > 1) { // normal
             rulefile = args[1];
             if (compile || compileOut !is null || compileOnly) {
-                readRules();
+                Rules().read(this);
                 Compiler().compile(this);
             } else {
                 executeRwg();
@@ -117,7 +118,7 @@ To start, drag rulefile here: `);
     // shows the command line options
     void writeUsage(File f = stdout) {
         f.writeln(
-`rwg 0.1.1
+`rwg 0.2
 Copyright (C) 2012 Nathan M. Swan
 
 Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
@@ -137,15 +138,7 @@ Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
     
     // once all the input is received, it's go time
     void executeRwg() {
-        readRules();
-        generateWords();
-    }
-    
-    void readRules() {
         rules.read(this);
-    }
-    
-    void generateWords() {
         WordGen().generateWords(this);
     }
     
@@ -165,42 +158,46 @@ Usage: `, args[0], ` [-h] [-n <count>] [--man] <langfile>
     string[] words;
 }
 
+// does the actual randomness
 struct WordGen {
+
+    // init seed, generateWord for num specified
     void generateWords(ref Options opts) {
         rg = Random(opts.seed == uint.max ? unpredictableSeed : opts.seed);
         foreach(i; 0 .. opts.wordcount) {
             writeln(generateWord(opts.rules));
         }
-        //writeln(disallows(opts.rules, "ii"d));
     }
     
+    // keep trying until attempt is NOT disallowed
     string generateWord(ref Rules rules) {
         dstring attempt;
         do {
             attempt = tryWord(rules);
-            //writeln("attempting ", toUTF8(attempt));
         } while (disallows(rules, attempt));
-        //writeln("accepted...");
         
         return toUTF8(attempt);
     }
     
+    // start at the top (ruleToGenerate)
     dstring tryWord(ref Rules rules) {
         return generate(rules, rules.ruleToGenerate);
     }
     
+    // create random instance of the rule
     dstring generate(ref Rules rules, Rule rule) {
-        //writeln("generating ", rule);
         if (rule.peek!Constant()) {
             auto r = rule.get!Constant();
             
+            // a constant is either a DefinedRule or a phoneme.
             auto newRule = r in rules.definedRules;
             if (newRule) {
                 return generate(rules, *newRule);
             } else {
-                return r;
+                return r; // a random constant is a constant
             }
         } else if (rule.peek!Sequence()) {
+            // generates each rule in the Sequence
             dstring r;
             foreach(rl; rule.get!Sequence()) {
                 r ~= generate(rules, rl);
@@ -208,12 +205,16 @@ struct WordGen {
             return r;
         } else {
             assert(rule.peek!Choice());
+            // 1. generate random float 
+            // 2. use getAt to get certain option 
+            // 3. generate that option
             return generate(rules, rule.get!Choice()
                     .getAt(uniform!"()"(0.0f, 1.0f, rg)));
         }
     }
     
     bool disallows(ref Rules rules, dstring attempt) {
+        // finding `forbiddenSequence` will make it true
         bool allows(bool b, dstring forbiddenSequence) {
             return b || attempt.canFind(forbiddenSequence);
         }

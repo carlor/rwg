@@ -24,8 +24,6 @@ Install the [D programming language](http://dlang.org), and the `make` system.
 Then:
     
     $ make
-    
-On *nix systems, execute `sudo make install` to install. 
 
 Untested on Windows.
 
